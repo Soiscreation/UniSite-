@@ -1,122 +1,152 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect, useMemo, useState } from 'react'
+import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
+import { ToastProvider } from './hooks/useToast.jsx'
+import { AppLayout } from './layouts/AppLayout.jsx'
+import { Login } from './pages/Login.jsx'
+import { Dashboard } from './pages/Dashboard.jsx'
+import { Clients } from './pages/Clients.jsx'
+import { ClientDetails } from './pages/ClientDetails.jsx'
+import { Policies } from './pages/Policies.jsx'
+import { ManagementPage } from './pages/ManagementPage.jsx'
 
-function App() {
-  const [count, setCount] = useState(0)
+const routes = {
+  '/': Dashboard,
+  '/dashboard': Dashboard,
+  '/clients': Clients,
+  '/policies': Policies,
+  '/employees': () => (
+    <ManagementPage
+      title="Employees"
+      description="Manage brokerage staff, role assignments, and branch access."
+      columns={['Name', 'Role', 'Region', 'Status']}
+      rows={[
+        ['Amina Shah', 'Admin', 'Nairobi', 'Active'],
+        ['Brian Otieno', 'Agent', 'Mombasa', 'Active'],
+        ['Carol Njeri', 'Staff', 'Kisumu', 'On leave'],
+      ]}
+      actions={['Add staff', 'Assign role', 'Deactivate']}
+    />
+  ),
+  '/claims': () => (
+    <ManagementPage
+      title="Claims"
+      description="Review claim submissions, documents, and approval decisions."
+      columns={['Claim', 'Client', 'Type', 'Decision']}
+      rows={[
+        ['CLM-1108', 'Mwananchi Foods', 'Fire', 'Pending'],
+        ['CLM-1097', 'Orbit Logistics', 'Motor', 'Approved'],
+        ['CLM-1052', 'Safeguard Homes', 'Property', 'Rejected'],
+      ]}
+      actions={['Upload document', 'Approve', 'Reject']}
+    />
+  ),
+  '/tenders': () => (
+    <ManagementPage
+      title="Tenders"
+      description="Upload, review, and download tender documentation."
+      columns={['Tender', 'Issuer', 'Due date', 'Files']}
+      rows={[
+        ['Medical Cover 2026', 'County Health Board', 'May 12, 2026', '4 docs'],
+        ['Fleet Insurance', 'Metro Transit', 'May 20, 2026', '2 docs'],
+      ]}
+      actions={['Upload tender', 'View', 'Download']}
+    />
+  ),
+  '/documents': () => (
+    <ManagementPage
+      title="Documents"
+      description="A file-manager view for client, policy, claim, and tender records."
+      columns={['File', 'Folder', 'Owner', 'Modified']}
+      rows={[
+        ['policy-schedule.pdf', 'Policies', 'Amina Shah', 'Today'],
+        ['claim-photos.zip', 'Claims', 'Brian Otieno', 'Yesterday'],
+        ['client-kyc.pdf', 'Clients', 'Carol Njeri', 'Apr 22, 2026'],
+      ]}
+      actions={['Upload', 'Preview', 'Delete']}
+      fileManager
+    />
+  ),
+  '/reports': () => (
+    <ManagementPage
+      title="Reports"
+      description="Export production, claims, renewals, and revenue reports."
+      columns={['Report', 'Period', 'Format', 'Status']}
+      rows={[
+        ['Revenue Summary', 'Q2 2026', 'PDF', 'Ready'],
+        ['Renewal Pipeline', 'May 2026', 'CSV', 'Ready'],
+        ['Claims Ratio', 'YTD', 'PDF', 'Generating'],
+      ]}
+      actions={['Download PDF', 'Download CSV', 'Schedule']}
+      report
+    />
+  ),
+  '/settings': () => (
+    <ManagementPage
+      title="Settings"
+      description="Configure roles, notification preferences, and system defaults."
+      columns={['Setting', 'Value', 'Owner', 'Status']}
+      rows={[
+        ['Default role', 'Staff', 'Admin', 'Enabled'],
+        ['Two-step review', 'Required for claims', 'Operations', 'Enabled'],
+        ['Renewal alerts', '30 days before expiry', 'System', 'Enabled'],
+      ]}
+      actions={['Save settings', 'Manage roles', 'Reset']}
+    />
+  ),
+}
+
+function useHashPath() {
+  const [path, setPath] = useState(() => window.location.hash.replace('#', '') || '/dashboard')
+
+  useEffect(() => {
+    const onHashChange = () => setPath(window.location.hash.replace('#', '') || '/dashboard')
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
+  const navigate = (nextPath) => {
+    window.location.hash = nextPath
+  }
+
+  return [path, navigate]
+}
+
+function Router() {
+  const [path, navigate] = useHashPath()
+  const { isAuthenticated } = useAuth()
+  const normalizedPath = path === '/' ? '/dashboard' : path
+
+  useEffect(() => {
+    if (!isAuthenticated && normalizedPath !== '/login') {
+      window.location.hash = '/login'
+    }
+    if (isAuthenticated && normalizedPath === '/login') {
+      window.location.hash = '/dashboard'
+    }
+  }, [isAuthenticated, normalizedPath])
+
+  const Page = useMemo(() => {
+    if (normalizedPath.startsWith('/clients/')) return ClientDetails
+    return routes[normalizedPath] || Dashboard
+  }, [normalizedPath])
+
+  if (!isAuthenticated) {
+    return <Login navigate={navigate} />
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    <AppLayout path={normalizedPath} navigate={navigate}>
+      <Page path={normalizedPath} navigate={navigate} />
+    </AppLayout>
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <ToastProvider>
+      <AuthProvider>
+        <Router />
+      </AuthProvider>
+    </ToastProvider>
+  )
+}
