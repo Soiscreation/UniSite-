@@ -1,17 +1,29 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 
-const ToastContext = createContext(null)
+type ToastType = 'success' | 'error' | 'warning' | 'info'
 
-export function ToastProvider({ children }) {
-  const [toasts, setToasts] = useState([])
+interface Toast {
+  id: string
+  message: string
+  type: ToastType
+}
 
-  const remove = useCallback((id) => {
+interface ToastContextValue {
+  notify: (message: string, type?: ToastType) => void
+}
+
+const ToastContext = createContext<ToastContextValue | null>(null)
+
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toasts, setToasts] = useState<Toast[]>([])
+
+  const remove = useCallback((id: string) => {
     setToasts((items) => items.filter((toast) => toast.id !== id))
   }, [])
 
   const notify = useCallback(
-    (message, type = 'success') => {
+    (message: string, type: ToastType = 'success') => {
       const id = crypto.randomUUID()
       setToasts((items) => [...items, { id, message, type }])
       setTimeout(() => remove(id), 3200)
@@ -35,7 +47,7 @@ export function ToastProvider({ children }) {
   )
 }
 
-export function useToast() {
+export function useToast(): ToastContextValue {
   const value = useContext(ToastContext)
   if (!value) throw new Error('useToast must be used inside ToastProvider')
   return value

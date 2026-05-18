@@ -1,15 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
-import { ToastProvider } from './hooks/useToast.jsx'
-import { AppLayout } from './layouts/AppLayout.jsx'
-import { Login } from './pages/Login.jsx'
-import { Dashboard } from './pages/Dashboard.jsx'
-import { Clients } from './pages/Clients.jsx'
-import { ClientDetails } from './pages/ClientDetails.jsx'
-import { Policies } from './pages/Policies.jsx'
-import { ManagementPage } from './pages/ManagementPage.jsx'
+import { AuthProvider, useAuth } from './hooks/useAuth'
+import { ToastProvider } from './hooks/useToast'
+import { AppLayout } from './layouts/AppLayout'
+import { Login } from './pages/Login'
+import { Dashboard } from './pages/Dashboard'
+import { Clients } from './pages/Clients'
+import { ClientDetails } from './pages/ClientDetails'
+import { Policies } from './pages/Policies'
+import { ManagementPage } from './pages/ManagementPage'
+import type { ComponentType } from 'react'
 
-const routes = {
+interface PageProps {
+  path: string
+  navigate: (path: string) => void
+}
+
+const routes: Record<string, ComponentType<PageProps>> = {
   '/': Dashboard,
   '/dashboard': Dashboard,
   '/clients': Clients,
@@ -95,7 +101,7 @@ const routes = {
   ),
 }
 
-function useHashPath() {
+function useHashPath(): [string, (path: string) => void] {
   const [path, setPath] = useState(() => window.location.hash.replace('#', '') || '/dashboard')
 
   useEffect(() => {
@@ -104,9 +110,7 @@ function useHashPath() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
-  const navigate = (nextPath) => {
-    window.location.hash = nextPath
-  }
+  const navigate = (nextPath: string) => { window.location.hash = nextPath }
 
   return [path, navigate]
 }
@@ -117,22 +121,16 @@ function Router() {
   const normalizedPath = path === '/' ? '/dashboard' : path
 
   useEffect(() => {
-    if (!isAuthenticated && normalizedPath !== '/login') {
-      window.location.hash = '/login'
-    }
-    if (isAuthenticated && normalizedPath === '/login') {
-      window.location.hash = '/dashboard'
-    }
+    if (!isAuthenticated && normalizedPath !== '/login') window.location.hash = '/login'
+    if (isAuthenticated && normalizedPath === '/login') window.location.hash = '/dashboard'
   }, [isAuthenticated, normalizedPath])
 
   const Page = useMemo(() => {
     if (normalizedPath.startsWith('/clients/')) return ClientDetails
-    return routes[normalizedPath] || Dashboard
+    return routes[normalizedPath] ?? Dashboard
   }, [normalizedPath])
 
-  if (!isAuthenticated) {
-    return <Login navigate={navigate} />
-  }
+  if (!isAuthenticated) return <Login />
 
   return (
     <AppLayout path={normalizedPath} navigate={navigate}>

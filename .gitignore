@@ -12,6 +12,17 @@ dist
 dist-ssr
 *.local
 
+# Environment files
+.env
+.env.*
+
+# Markdown docs (keep README and CHANGELOG)
+*.md
+!README.md
+!readme.md
+!CHANGELOG.md
+!changelog.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +33,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+*.postman_collection.json
+.claude/

@@ -1,4 +1,4 @@
-export function formatCurrency(value) {
+export function formatCurrency(value: number): string {
   return new Intl.NumberFormat('en-KE', {
     style: 'currency',
     currency: 'KES',
@@ -6,7 +6,7 @@ export function formatCurrency(value) {
   }).format(value)
 }
 
-export function formatDate(value) {
+export function formatDate(value: string): string {
   return new Intl.DateTimeFormat('en-GB', {
     day: '2-digit',
     month: 'short',
@@ -14,7 +14,7 @@ export function formatDate(value) {
   }).format(new Date(value))
 }
 
-export function paginate(items, page, pageSize) {
+export function paginate<T>(items: T[], page: number, pageSize: number): T[] {
   const start = (page - 1) * pageSize
   return items.slice(start, start + pageSize)
 }
