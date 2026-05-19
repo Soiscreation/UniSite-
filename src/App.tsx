@@ -7,6 +7,7 @@ import { Dashboard } from './pages/Dashboard'
 import { Clients } from './pages/Clients'
 import { ClientDetails } from './pages/ClientDetails'
 import { Policies } from './pages/Policies'
+import { Profile } from './pages/Profile'
 import { ManagementPage } from './pages/ManagementPage'
 import type { ComponentType } from 'react'
 
@@ -18,6 +19,7 @@ interface PageProps {
 const routes: Record<string, ComponentType<PageProps>> = {
   '/': Dashboard,
   '/dashboard': Dashboard,
+  '/profile': Profile,
   '/clients': Clients,
   '/policies': Policies,
   '/employees': () => (
